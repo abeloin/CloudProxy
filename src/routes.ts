@@ -2,8 +2,8 @@ import { v1 as UUIDv1 } from 'uuid'
 import sessions, { SessionsCacheItem } from './session'
 import { RequestContext } from './types'
 import log from './log'
-import { Browser, SetCookie, Request, Page, Headers, HttpMethod, Overrides, Cookie } from 'puppeteer'
-import { TimeoutError } from 'puppeteer/Errors'
+import {Browser, SetCookie, Request, Page, Headers, HttpMethod, Overrides, Cookie, errors} from 'puppeteer'
+import TimeoutError = errors.TimeoutError;
 import getCaptchaSolver, { CaptchaType } from './captcha'
 
 export interface BaseAPICall {
@@ -157,7 +157,7 @@ async function resolveChallenge(ctx: RequestContext, { url, maxTimeout, proxy, d
 
           // TODO: find out why these pages hang sometimes
           while (Date.now() - ctx.startTimestamp < maxTimeout) {
-            await page.waitFor(1000)
+            await page.waitForTimeout(1000)
             try {
               // catch exception timeout in waitForNavigation
               response = await page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 5000 })
@@ -254,7 +254,7 @@ async function resolveChallenge(ctx: RequestContext, { url, maxTimeout, proxy, d
 
           // waits, if any, time remaining to appear human but stay as fast as possible
           const timeLeft = randomWaitTime - captchaSolveTotalTime
-          if (timeLeft > 0) { await page.waitFor(timeLeft) }
+          if (timeLeft > 0) { await page.waitForTimeout(timeLeft) }
 
           let interceptingResult: ChallengeResolutionT;
           if (returnOnlyCookies) { //If we just want to get the cookies, intercept the response before we get the content/body (just cookies and headers)
